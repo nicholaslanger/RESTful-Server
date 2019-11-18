@@ -1,0 +1,28 @@
+{
+    "name": "dynamic-webserver",
+    "version": "0.0.0",
+    "description": "Dynamic Web Server using Node JS",
+    "author": {
+        "name": "Nicholas Langer",
+        "email": "lang22002@stthomas.edu"
+    },
+    "contributors": [
+        {
+            "name": "Nicholas Langer",
+            "email": "lang22002@stthomas.edu"
+        },
+        {
+            "name": "Trevor Pilgrim",
+            "email": "pilg5971@stthomas.edu"
+        }
+    ],
+    "main": "server.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nicholaslanger/Project-3---RESTful-Server.git"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "sqlite3": "^4.1.0"
+    }
+}
