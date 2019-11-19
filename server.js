@@ -27,17 +27,50 @@ app.get('/codes', (req,res) => {
 		}
 		
 		var solution = {};
-		for(var key in row)
+		if(req.query.code)
 		{
-			solution[("C" + row[key].code)] = row[key].incident_type;
+			var num_list = req.query.code.split(',')
+			if(num_list.length == 2)
+			{
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else
+			{
+				var start = parseInt(num_list[0]);
+				var end = 9959;
+			}
+			console.log("Start: " + start);
+			console.log("End: " + end);
+			for(var key in row)
+			{
+				if(row[key].code >= start && row[key].code <= end)
+				{
+					solution[("C" + row[key].code)] = row[key].incident_type;
+				}
+			}
+			//console.log("Code: " + req.query.code);
 		}
-		
+		else
+		{
+			for(var key in row)
+			{
+				solution[("C" + row[key].code)] = row[key].incident_type;
+			}
+		}
 		
 		for (var key in solution) {
 			console.log(solution + ": " + solution[key]);
 		}
 		
-		res.type("json").send(JSON.stringify(solution,null,4));			
+		if(req.query.format == "xml")
+		{
+			res.type("xml").send(solution);
+		}
+		else
+		{
+			res.type("json").send(JSON.stringify(solution,null,4));	
+		}			
 	});
 });
 
@@ -104,23 +137,6 @@ app.put('/new-incident', (req, res) => {
 	VALUES (`+key+`, `+new_incident[key].date+`, `+new_incident[key].code+`, `+new_incident[key].incident+`, `+new_incident[key].police_grid+`, `+new_incident[key].neighborhood_number+`, `+new_incident[key].block+`)`;
 
 	console.log(sql);
-
-	// let resources = new Promise((resolve, reject) =>{
-    //     db.all("SELECT * FROM Incidents", (err, row)=> {
-    //         if(err) {
-    //             reject(err);
-    //         }
-
-	// 		// for (var key in row) {
-	// 		// 	console.log(row[key]);
-	// 		// }
-			
-	// 		// res.type("json").send(row);			
-
-	// 		resolve();
-	// 	});
-	// });
-
 	console.log(new_incident);
 });
 	
