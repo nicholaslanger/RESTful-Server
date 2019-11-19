@@ -87,43 +87,41 @@ app.get('/incidents', (req, res) => {
 
 app.put('/new-incident', (req, res) => {
 	//throw error for duplicates
-	//var new_incedent = req.body.case_number;	
-	var duplicate_id = false;
-	var hold = 0;
-	var new_incedent = {
-		date: req.body.date,
-		time: req.body.time,
-		code: req.body.code,
-		incident: req.body.incident,
-		police_grid: req.body.police_grid,
-		neighborhood_number: req.body.neighborhood_number,
-		block: req.body.block
+	//new_incedent = req.body.case_number;
+	var key = req.body.case_number;
+	var new_incident = {};
+	new_incident[key] = {
+		"date": req.body.date,
+		"time": req.body.time,
+		"code": req.body.code,
+		"incident": req.body.incident,
+		"police_grid": req.body.police_grid,
+		"neighborhood_number": req.body.neighborhood_number,
+		"block": req.body.block
     };
-	
-	/*for(let i = 0; i<users.users.length;i++)
-	{
-		console.log("Loop " + i + ": " + users.users[i])
-		if(users.users[i].id == new_user.id)
-		{
-		real_id = true;
-		hold = i;
-		}
-	}*/
-	
-	if(!duplicate_id)
-	{
-		users.users[hold].name = req.body.name;
-		users.users[hold].id = req.body.id;
-		users.users[hold].email = req.body.email;
-		res.status(200).send("The data has successfully been added");
-	}
-	else
-	{
-		res.status(500).send("The submitted case number already exists.");
-	}	
-	
-	console.log(new_incedent);
 
+	var sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
+	VALUES (`+key+`, `+new_incident[key].date+`, `+new_incident[key].code+`, `+new_incident[key].incident+`, `+new_incident[key].police_grid+`, `+new_incident[key].neighborhood_number+`, `+new_incident[key].block+`)`;
+
+	console.log(sql);
+
+	// let resources = new Promise((resolve, reject) =>{
+    //     db.all("SELECT * FROM Incidents", (err, row)=> {
+    //         if(err) {
+    //             reject(err);
+    //         }
+
+	// 		// for (var key in row) {
+	// 		// 	console.log(row[key]);
+	// 		// }
+			
+	// 		// res.type("json").send(row);			
+
+	// 		resolve();
+	// 	});
+	// });
+
+	console.log(new_incident);
 });
 	
 console.log('Now Listening on port: ' + port);
