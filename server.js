@@ -12,7 +12,7 @@ var app = express();
 app.use(express.static(__dirname));
 app.use(bodyParser.urlencoded({extended: true}));
 
-var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
+var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
 	if (err) {
 		console.log("Error opening " + db_filename);
 	}else {
@@ -87,13 +87,31 @@ app.get('/incidents', (req, res) => {
 
 app.put('/new-incident', (req, res) => {
 
-	var sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
-	VALUES (`+req.body.case_number;+`, `+req.body.date+`, `+req.body.code+`, `+req.body.incident+`, `+req.body.police_grid+`, `+req.body.neighborhood_number+`, `+req.body.block+`)`;
+	var insert_sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
+		VALUES ('`+req.body.case_number+`', '`+req.body.date+`T`+req.body.time+`', `+req.body.code+`, '`+req.body.incident+`', `+req.body.police_grid+`, `+req.body.neighborhood_number+`, '`+req.body.block+`');`;
 
-	db.all(sql, (err, row)=> {
-		if(err) {
-			reject(err);
-		}
+	var check_sql = `SELECT case_number FROM Incidents WHERE case_number = ` + req.body.case_number+`;`
+
+	var promise1 = new Promise((resolve, reject) =>{
+		db.all(check_sql, (err, rows)=>{
+			if (rows.length > 0){
+				resolve();
+			}else{
+				reject();
+			}
+		});
+	});
+
+	promise1.then(()=>{
+		res.type("text").status(500).send("thats already been added to the db!!");
+	}).catch(()=>{
+		db.run(insert_sql, (err)=> {
+			if(err) {
+				console.log(err);
+			}else{
+				res.type("text").status(200).send("great success! very nice!");
+			}
+		});
 	});
 
 });
