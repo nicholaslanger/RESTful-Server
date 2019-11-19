@@ -27,17 +27,50 @@ app.get('/codes', (req,res) => {
 		}
 		
 		var solution = {};
-		for(var key in row)
+		if(req.query.code)
 		{
-			solution[("C" + row[key].code)] = row[key].incident_type;
+			var num_list = req.query.code.split(',')
+			if(num_list.length == 2)
+			{
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else
+			{
+				var start = parseInt(num_list[0]);
+				var end = 9959;
+			}
+			console.log("Start: " + start);
+			console.log("End: " + end);
+			for(var key in row)
+			{
+				if(row[key].code >= start && row[key].code <= end)
+				{
+					solution[("C" + row[key].code)] = row[key].incident_type;
+				}
+			}
+			//console.log("Code: " + req.query.code);
 		}
-		
+		else
+		{
+			for(var key in row)
+			{
+				solution[("C" + row[key].code)] = row[key].incident_type;
+			}
+		}
 		
 		for (var key in solution) {
 			console.log(solution + ": " + solution[key]);
 		}
 		
-		res.type("json").send(JSON.stringify(solution,null,4));			
+		if(req.query.format == "xml")
+		{
+			res.type("xml").send(solution);
+		}
+		else
+		{
+			res.type("json").send(JSON.stringify(solution,null,4));	
+		}			
 	});
 });
 
@@ -112,8 +145,8 @@ app.put('/new-incident', (req, res) => {
 				res.type("text").status(200).send("great success! very nice!");
 			}
 		});
-	});
 
+	});
 });
 	
 console.log('Now Listening on port: ' + port);
