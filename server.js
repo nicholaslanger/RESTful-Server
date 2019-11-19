@@ -41,7 +41,7 @@ app.get('/codes', (req,res) => {
 			else
 			{
 				var start = parseInt(num_list[0]);
-				var end = 9959;
+				var end = Number.MAX_VALUE;
 			}
 			//console.log("Start: " + start);
 			//console.log("End: " + end);
@@ -124,7 +124,7 @@ app.get('/neighborhoods', (req, res) => {
 		
 		if(req.query.format == "xml")
 		{
-			res.type("xml").send(js2xmlparser.parse("codes",solution));
+			res.type("xml").send(js2xmlparser.parse("neighborhoods",solution));
 		}
 		else
 		{
@@ -140,20 +140,151 @@ app.get('/incidents', (req, res) => {
 		}
 
 		var solution = {};	
-		for(var key in row)
-		{
-			solution[("I" + row[key].case_number)] = {
-				"date": row[key].date_time.substring(0,10),
-				"time": row[key].date_time.substring(11),
-				"code": row[key].code,
-				"incident": row[key].incident,
-				"police_grid": row[key].police_grid,
-				"neighborhood_number": row[key].neighborhood_number,
-				"block": row[key].block
-			};
+
+		if (req.query.start_date){
+			var toCompare = parseInt(req.query.start_date.replace(/-/g,""));
+			//console.log(toCompare);
+			for (var key in row){
+				if (parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")) >= toCompare) {
+					solution[("I" + row[key].case_number)] = {
+						"date": row[key].date_time.substring(0,10),
+						"time": row[key].date_time.substring(11),
+						"code": row[key].code,
+						"incident": row[key].incident,
+						"police_grid": row[key].police_grid,
+						"neighborhood_number": row[key].neighborhood_number,
+						"block": row[key].block
+					};
+				}
+			}
+		}else if (req.query.end_date){
+			var toCompare = parseInt(req.query.end_date.replace(/-/g,""));
+			//console.log(toCompare);
+			for (var key in row){
+				if (parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")) <= toCompare) {
+					solution[("I" + row[key].case_number)] = {
+						"date": row[key].date_time.substring(0,10),
+						"time": row[key].date_time.substring(11),
+						"code": row[key].code,
+						"incident": row[key].incident,
+						"police_grid": row[key].police_grid,
+						"neighborhood_number": row[key].neighborhood_number,
+						"block": row[key].block
+					};
+				}
+			}
+		}else if (req.query.code){
+			var num_list = req.query.code.split(',')
+			if(num_list.length == 2){
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else{
+				var start = parseInt(num_list[0]);
+				var end = Number.MAX_VALUE;
+			}
+			for(var key in row){
+				if(row[key].code >= start && row[key].code <= end){
+					solution[("I" + row[key].case_number)] = {
+						"date": row[key].date_time.substring(0,10),
+						"time": row[key].date_time.substring(11),
+						"code": row[key].code,
+						"incident": row[key].incident,
+						"police_grid": row[key].police_grid,
+						"neighborhood_number": row[key].neighborhood_number,
+						"block": row[key].block
+					};
+				}
+			}
+		}else if(req.query.grid){
+			var num_list = req.query.grid.split(',')
+			if(num_list.length == 2){
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else{
+				var start = parseInt(num_list[0]);
+				var end = Number.MAX_VALUE;
+			}
+			for(var key in row){
+				if(row[key].police_grid >= start && row[key].police_grid <= end){
+					solution[("I" + row[key].case_number)] = {
+						"date": row[key].date_time.substring(0,10),
+						"time": row[key].date_time.substring(11),
+						"code": row[key].code,
+						"incident": row[key].incident,
+						"police_grid": row[key].police_grid,
+						"neighborhood_number": row[key].neighborhood_number,
+						"block": row[key].block
+					};
+				}
+			}
+		}else if(req.query.id){
+			var num_list = req.query.id.split(',')
+			if(num_list.length == 2){
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else{
+				var start = parseInt(num_list[0]);
+				var end = Number.MAX_VALUE;
+			}
+			for(var key in row){
+				if(row[key].neighborhood_number >= start && row[key].neighborhood_number <= end){
+					solution[("I" + row[key].case_number)] = {
+						"date": row[key].date_time.substring(0,10),
+						"time": row[key].date_time.substring(11),
+						"code": row[key].code,
+						"incident": row[key].incident,
+						"police_grid": row[key].police_grid,
+						"neighborhood_number": row[key].neighborhood_number,
+						"block": row[key].block
+					};
+				}
+			}
+		}else if(req.query.limit){
+			var count = 0;
+			for(var key in row){
+				if (count == req.query.limit){
+					break;
+				}
+				solution[("I" + row[key].case_number)] = {
+					"date": row[key].date_time.substring(0,10),
+					"time": row[key].date_time.substring(11),
+					"code": row[key].code,
+					"incident": row[key].incident,
+					"police_grid": row[key].police_grid,
+					"neighborhood_number": row[key].neighborhood_number,
+					"block": row[key].block
+				};
+				count++;
+			}
+		}else{
+			var count = 0;
+			for(var key in row){
+				if (count == 10000){
+					break;
+				}
+				solution[("I" + row[key].case_number)] = {
+					"date": row[key].date_time.substring(0,10),
+					"time": row[key].date_time.substring(11),
+					"code": row[key].code,
+					"incident": row[key].incident,
+					"police_grid": row[key].police_grid,
+					"neighborhood_number": row[key].neighborhood_number,
+					"block": row[key].block
+				};
+				count++;
+			}
 		}
-		
-		res.type("json").send(JSON.stringify(solution,null,4));			
+
+		if (req.query.format == 'xml'){
+			res.type("xml").send(js2xmlparser.parse("incidents",solution));
+		}else{
+			res.type("json").send(JSON.stringify(solution,null,4));
+		}
+
+					
 	});
 });
 
