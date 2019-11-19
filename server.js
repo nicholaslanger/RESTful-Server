@@ -119,25 +119,21 @@ app.get('/incidents', (req, res) => {
 });
 
 app.put('/new-incident', (req, res) => {
-	//throw error for duplicates
-	//new_incedent = req.body.case_number;
-	var key = req.body.case_number;
-	var new_incident = {};
-	new_incident[key] = {
-		"date": req.body.date,
-		"time": req.body.time,
-		"code": req.body.code,
-		"incident": req.body.incident,
-		"police_grid": req.body.police_grid,
-		"neighborhood_number": req.body.neighborhood_number,
-		"block": req.body.block
-    };
 
 	var sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
-	VALUES (`+key+`, `+new_incident[key].date+`, `+new_incident[key].code+`, `+new_incident[key].incident+`, `+new_incident[key].police_grid+`, `+new_incident[key].neighborhood_number+`, `+new_incident[key].block+`)`;
+	VALUES (`+req.body.case_number;+`, `+req.body.date+`, `+req.body.code+`, `+req.body.incident+`, `+req.body.police_grid+`, `+req.body.neighborhood_number+`, `+req.body.block+`)`;
 
+<<<<<<< HEAD
 	console.log(sql);
 	console.log(new_incident);
+=======
+	db.all(sql, (err, row)=> {
+		if(err) {
+			reject(err);
+		}
+	});
+
+>>>>>>> 5ebc2fab662024de66857f11e448eab36678ba07
 });
 	
 console.log('Now Listening on port: ' + port);
