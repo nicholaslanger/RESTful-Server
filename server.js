@@ -3,8 +3,9 @@ var path = require('path');
 var express = require('express');
 var sqlite3 = require('sqlite3');
 var bodyParser = require('body-parser');
-var db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
+var js2xmlparser = require('js2xmlparser');
 
+var db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
 var port = 8000;
 
 //Initializing the server
@@ -27,6 +28,8 @@ app.get('/codes', (req,res) => {
 		}
 		
 		var solution = {};
+		
+		//HANDLING ?code query
 		if(req.query.code)
 		{
 			var num_list = req.query.code.split(',')
@@ -40,8 +43,8 @@ app.get('/codes', (req,res) => {
 				var start = parseInt(num_list[0]);
 				var end = 9959;
 			}
-			console.log("Start: " + start);
-			console.log("End: " + end);
+			//console.log("Start: " + start);
+			//console.log("End: " + end);
 			for(var key in row)
 			{
 				if(row[key].code >= start && row[key].code <= end)
@@ -59,13 +62,15 @@ app.get('/codes', (req,res) => {
 			}
 		}
 		
-		for (var key in solution) {
-			console.log(solution + ": " + solution[key]);
-		}
 		
+		/*for (var key in solution) {
+			console.log(solution + ": " + solution[key]);
+		}*/
+		
+		//HANDLING ?format query
 		if(req.query.format == "xml")
 		{
-			res.type("xml").send(solution);
+			res.type("xml").send(js2xmlparser.parse("codes",solution));
 		}
 		else
 		{
@@ -81,16 +86,50 @@ app.get('/neighborhoods', (req, res) => {
 		}
 		
 		var solution = {};
-		for(var key in row)
+		if(req.query.id)
 		{
-			solution[("N" + row[key].neighborhood_number)] = row[key].neighborhood_name;
+			var num_list = req.query.id.split(',')
+			if(num_list.length == 2)
+			{
+				var start = parseInt(num_list[0]);
+				var end = parseInt(num_list[1]);
+			}
+			else
+			{
+				var start = parseInt(num_list[0]);
+				var end = 17;
+			}
+			//console.log("Start: " + start);
+			//console.log("End: " + end);
+			for(var key in row)
+			{
+				if(row[key].neighborhood_number >= start && row[key].neighborhood_number <= end)
+				{
+					solution[("N" + row[key].neighborhood_number)] = row[key].neighborhood_name;
+				}
+			}
+			//console.log("Code: " + req.query.code);	
 		}
-
-		for (var key in solution) {
-			console.log(solution[key]);
+		else
+		{
+			for(var key in row)
+			{
+				solution[("N" + row[key].neighborhood_number)] = row[key].neighborhood_name;
+			}
 		}
 		
-		res.type("json").send(JSON.stringify(solution,null,4));			
+		/*for (var key in solution) {
+			console.log(solution[key]);
+		}*/
+		
+		if(req.query.format == "xml")
+		{
+			res.type("xml").send(js2xmlparser.parse("codes",solution));
+		}
+		else
+		{
+			res.type("json").send(JSON.stringify(solution,null,4));	
+		}
 	});
 });
 
