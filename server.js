@@ -21,6 +21,58 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
 	}
 });
 
+//---------------------------------------------------------//
+	//Organization functions
+
+function approveNums(num_list,testCase)
+{
+	var flag = true;
+	if(num_list.length == 2)
+	{
+		var start = parseInt(num_list[0]);
+		var end = parseInt(num_list[1]);
+		if(start > end)
+		{
+			var hold = end;
+			end = start;
+			start = hold;
+		}
+	}
+	else
+	{
+		var start = parseInt(num_list[0]);
+		var end = Number.MAX_VALUE;
+	}
+	
+	if(!(testCase >= start && testCase <= end))
+	{
+		flag = false;
+	}
+	return flag;
+}
+
+function afterStartDate(start_date,testCase)
+{
+	var flag = true;
+	if(!(testCase >= start_date))
+	{
+		flag = false;
+	}
+	return flag;
+}
+
+function beforeEndDate(end_date,testCase)
+{
+	var flag = true;
+	if(!(testCase <= end_date))
+	{
+		flag = false;
+	}
+	return flag;
+}
+
+//---------------------------------------------------------//
+
 app.get('/codes', (req,res) => {
 	db.all("SELECT * FROM Codes", (err, row)=> {
 		if(err) {
@@ -28,47 +80,27 @@ app.get('/codes', (req,res) => {
 		}
 		
 		var solution = {};
-		
-		//HANDLING ?code query
-		if(req.query.code)
-		{
-			var num_list = req.query.code.split(',')
-			if(num_list.length == 2)
+		var codeFlag;
+	
+		for(var key in row)
+		{			
+			if(req.query.code)
 			{
-				var start = parseInt(num_list[0]);
-				var end = parseInt(num_list[1]);
+				codeFlag = approveNums(req.query.code.split(','),row[key].code);
 			}
 			else
 			{
-				var start = parseInt(num_list[0]);
-				var end = Number.MAX_VALUE;
+				codeFlag = true;
 			}
-			//console.log("Start: " + start);
-			//console.log("End: " + end);
-			for(var key in row)
-			{
-				if(row[key].code >= start && row[key].code <= end)
-				{
-					solution[("C" + row[key].code)] = row[key].incident_type;
-				}
-			}
-			//console.log("Code: " + req.query.code);
-		}
-		else
-		{
-			for(var key in row)
+				
+			if(codeFlag)
 			{
 				solution[("C" + row[key].code)] = row[key].incident_type;
 			}
 		}
-		
-		
-		/*for (var key in solution) {
-			console.log(solution + ": " + solution[key]);
-		}*/
-		
+				
 		//HANDLING ?format query
-		if(req.query.format == "xml")
+		if(req.query.format == 'xml')
 		{
 			res.type("xml").send(js2xmlparser.parse("codes",solution));
 		}
@@ -86,41 +118,24 @@ app.get('/neighborhoods', (req, res) => {
 		}
 		
 		var solution = {};
-		if(req.query.id)
+		var neighbor_numFlag;
+		
+		for(var key in row)
 		{
-			var num_list = req.query.id.split(',')
-			if(num_list.length == 2)
+			if(req.query.id)
 			{
-				var start = parseInt(num_list[0]);
-				var end = parseInt(num_list[1]);
+				neighbor_numFlag = approveNums(req.query.id.split(','),row[key].neighborhood_number);
 			}
 			else
 			{
-				var start = parseInt(num_list[0]);
-				var end = 17;
+				neighbor_numFlag = true;
 			}
-			//console.log("Start: " + start);
-			//console.log("End: " + end);
-			for(var key in row)
-			{
-				if(row[key].neighborhood_number >= start && row[key].neighborhood_number <= end)
-				{
-					solution[("N" + row[key].neighborhood_number)] = row[key].neighborhood_name;
-				}
-			}
-			//console.log("Code: " + req.query.code);	
-		}
-		else
-		{
-			for(var key in row)
+			
+			if(neighbor_numFlag)
 			{
 				solution[("N" + row[key].neighborhood_number)] = row[key].neighborhood_name;
 			}
 		}
-		
-		/*for (var key in solution) {
-			console.log(solution[key]);
-		}*/
 		
 		if(req.query.format == "xml")
 		{
@@ -140,12 +155,55 @@ app.get('/incidents', (req, res) => {
 		}
 
 		var solution = {};	
-
-		if (req.query.start_date){
-			var toCompare = parseInt(req.query.start_date.replace(/-/g,""));
-			//console.log(toCompare);
-			for (var key in row){
-				if (parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")) >= toCompare) {
+		var count = 0;
+		var startFlag;
+		var endFlag;
+		var codeFlag;
+		var gridFlag;
+		var neighbor_numFlag;
+		
+		for(var key in row){
+			if (count == 10000){
+				break;
+			}
+			else if(req.query.limit && req.query.limit == count)
+			{
+				break;
+			}
+			else
+			{
+				//START DATE
+				if(req.query.start_date)
+				{
+					startFlag = afterStartDate((req.query.start_date.replace(/-/g,"")),parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")));
+				}
+				
+				//END DATE
+				if(req.query.end_date)
+				{
+					endFlag = beforeEndDate((req.query.end_date.replace(/-/g,"")),parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")));
+				}
+				
+				//CODE
+				if(req.query.code)
+				{
+					codeFlag = approveNums(req.query.code.split(','),row[key].code)
+				}
+				
+				//POLICE GRID
+				if(req.query.grid)
+				{
+					gridFlag = approveNums(req.query.grid.split(','),row[key].police_grid);
+				}
+				
+				//ID
+				if(req.query.id)
+				{
+					neighbor_numFlag = approveNums(req.query.id.split(','),row[key].neighborhood_number);
+				}
+				
+				if(startFlag && endFlag && codeFlag && gridFlag && neighbor_numFlag)
+				{
 					solution[("I" + row[key].case_number)] = {
 						"date": row[key].date_time.substring(0,10),
 						"time": row[key].date_time.substring(11),
@@ -155,136 +213,16 @@ app.get('/incidents', (req, res) => {
 						"neighborhood_number": row[key].neighborhood_number,
 						"block": row[key].block
 					};
+					count++;
 				}
-			}
-		}else if (req.query.end_date){
-			var toCompare = parseInt(req.query.end_date.replace(/-/g,""));
-			//console.log(toCompare);
-			for (var key in row){
-				if (parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")) <= toCompare) {
-					solution[("I" + row[key].case_number)] = {
-						"date": row[key].date_time.substring(0,10),
-						"time": row[key].date_time.substring(11),
-						"code": row[key].code,
-						"incident": row[key].incident,
-						"police_grid": row[key].police_grid,
-						"neighborhood_number": row[key].neighborhood_number,
-						"block": row[key].block
-					};
-				}
-			}
-		}else if (req.query.code){
-			var num_list = req.query.code.split(',')
-			if(num_list.length == 2){
-				var start = parseInt(num_list[0]);
-				var end = parseInt(num_list[1]);
-			}
-			else{
-				var start = parseInt(num_list[0]);
-				var end = Number.MAX_VALUE;
-			}
-			for(var key in row){
-				if(row[key].code >= start && row[key].code <= end){
-					solution[("I" + row[key].case_number)] = {
-						"date": row[key].date_time.substring(0,10),
-						"time": row[key].date_time.substring(11),
-						"code": row[key].code,
-						"incident": row[key].incident,
-						"police_grid": row[key].police_grid,
-						"neighborhood_number": row[key].neighborhood_number,
-						"block": row[key].block
-					};
-				}
-			}
-		}else if(req.query.grid){
-			var num_list = req.query.grid.split(',')
-			if(num_list.length == 2){
-				var start = parseInt(num_list[0]);
-				var end = parseInt(num_list[1]);
-			}
-			else{
-				var start = parseInt(num_list[0]);
-				var end = Number.MAX_VALUE;
-			}
-			for(var key in row){
-				if(row[key].police_grid >= start && row[key].police_grid <= end){
-					solution[("I" + row[key].case_number)] = {
-						"date": row[key].date_time.substring(0,10),
-						"time": row[key].date_time.substring(11),
-						"code": row[key].code,
-						"incident": row[key].incident,
-						"police_grid": row[key].police_grid,
-						"neighborhood_number": row[key].neighborhood_number,
-						"block": row[key].block
-					};
-				}
-			}
-		}else if(req.query.id){
-			var num_list = req.query.id.split(',')
-			if(num_list.length == 2){
-				var start = parseInt(num_list[0]);
-				var end = parseInt(num_list[1]);
-			}
-			else{
-				var start = parseInt(num_list[0]);
-				var end = Number.MAX_VALUE;
-			}
-			for(var key in row){
-				if(row[key].neighborhood_number >= start && row[key].neighborhood_number <= end){
-					solution[("I" + row[key].case_number)] = {
-						"date": row[key].date_time.substring(0,10),
-						"time": row[key].date_time.substring(11),
-						"code": row[key].code,
-						"incident": row[key].incident,
-						"police_grid": row[key].police_grid,
-						"neighborhood_number": row[key].neighborhood_number,
-						"block": row[key].block
-					};
-				}
-			}
-		}else if(req.query.limit){
-			var count = 0;
-			for(var key in row){
-				if (count == req.query.limit){
-					break;
-				}
-				solution[("I" + row[key].case_number)] = {
-					"date": row[key].date_time.substring(0,10),
-					"time": row[key].date_time.substring(11),
-					"code": row[key].code,
-					"incident": row[key].incident,
-					"police_grid": row[key].police_grid,
-					"neighborhood_number": row[key].neighborhood_number,
-					"block": row[key].block
-				};
-				count++;
-			}
-		}else{
-			var count = 0;
-			for(var key in row){
-				if (count == 10000){
-					break;
-				}
-				solution[("I" + row[key].case_number)] = {
-					"date": row[key].date_time.substring(0,10),
-					"time": row[key].date_time.substring(11),
-					"code": row[key].code,
-					"incident": row[key].incident,
-					"police_grid": row[key].police_grid,
-					"neighborhood_number": row[key].neighborhood_number,
-					"block": row[key].block
-				};
-				count++;
 			}
 		}
-
+		
 		if (req.query.format == 'xml'){
 			res.type("xml").send(js2xmlparser.parse("incidents",solution));
 		}else{
 			res.type("json").send(JSON.stringify(solution,null,4));
-		}
-
-					
+		}					
 	});
 });
 
