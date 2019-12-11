@@ -176,30 +176,40 @@ app.get('/incidents', (req, res) => {
 				if(req.query.start_date)
 				{
 					startFlag = afterStartDate((req.query.start_date.replace(/-/g,"")),parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")));
+				}else{
+					startFlag = true;
 				}
 				
 				//END DATE
 				if(req.query.end_date)
 				{
 					endFlag = beforeEndDate((req.query.end_date.replace(/-/g,"")),parseInt(row[key].date_time.substring(0,10).replace(/-/g,"")));
+				}else{
+					endFlag = true;
 				}
 				
 				//CODE
 				if(req.query.code)
 				{
 					codeFlag = approveNums(req.query.code.split(','),row[key].code)
+				}else{
+					codeFlag = true;
 				}
 				
 				//POLICE GRID
 				if(req.query.grid)
 				{
 					gridFlag = approveNums(req.query.grid.split(','),row[key].police_grid);
+				}else{
+					gridFlag = true;
 				}
 				
 				//ID
 				if(req.query.id)
 				{
 					neighbor_numFlag = approveNums(req.query.id.split(','),row[key].neighborhood_number);
+				}else{
+					neighbor_numFlag = true;
 				}
 				
 				if(startFlag && endFlag && codeFlag && gridFlag && neighbor_numFlag)
